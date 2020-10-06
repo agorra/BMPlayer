@@ -73,9 +73,19 @@ open class BMPlayerLayerView: UIView {
     }()
     
     
+    open var customVideoGravity: AVLayerVideoGravity? {
+        didSet {
+            if let customVideoGravity = customVideoGravity {
+                self.playerLayer?.videoGravity = customVideoGravity
+            }
+        }
+    }
+    
     open var videoGravity = AVLayerVideoGravity.resizeAspect {
         didSet {
-            self.playerLayer?.videoGravity = videoGravity
+            if self.customVideoGravity == nil {
+                self.playerLayer?.videoGravity = videoGravity
+            }
         }
     }
     
@@ -168,15 +178,22 @@ open class BMPlayerLayerView: UIView {
         super.layoutSubviews()
         switch self.aspectRatio {
         case .default:
-            self.playerLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            if self.customVideoGravity == nil {
+                self.playerLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            }
             self.playerLayer?.frame  = self.bounds
             break
         case .sixteen2NINE:
+            if self.customVideoGravity == nil {
+                self.playerLayer?.videoGravity = AVLayerVideoGravity.resize
+            }
             self.playerLayer?.videoGravity = AVLayerVideoGravity.resize
             self.playerLayer?.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.width/(16/9))
             break
         case .four2THREE:
-            self.playerLayer?.videoGravity = AVLayerVideoGravity.resize
+            if self.customVideoGravity == nil {
+                self.playerLayer?.videoGravity = AVLayerVideoGravity.resize
+            }
             let _w = self.bounds.height * 4 / 3
             self.playerLayer?.frame = CGRect(x: (self.bounds.width - _w )/2, y: 0, width: _w, height: self.bounds.height)
             break
@@ -448,7 +465,11 @@ open class BMPlayerLayerView: UIView {
     @objc fileprivate func connectPlayerLayer() {
         playerLayer?.removeFromSuperlayer()
         playerLayer = AVPlayerLayer(player: player)
-        playerLayer!.videoGravity = videoGravity
+        if let customVideoGravity = self.customVideoGravity {
+            playerLayer!.videoGravity = customVideoGravity
+        } else {
+            playerLayer!.videoGravity = videoGravity
+        }
         
         layer.addSublayer(playerLayer!)
     }
